@@ -104,20 +104,29 @@ export default function App() {
   const audioCtx = useRef<AudioContext | null>(null);
   const lastPlayed = useRef<string | null>(null);
 
-  // Auto-detection and theme class management
+  // Initialize theme from localStorage or system preference
   useEffect(() => {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(isDark ? 'dark' : 'light');
+    const savedTheme = localStorage.getItem('fuel-flow-theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(isDark ? 'dark' : 'light');
+    }
 
+    // Listen for system theme changes ONLY if user hasn't set a preference
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      setTheme(e.matches ? 'dark' : 'light');
+      if (!localStorage.getItem('fuel-flow-theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Apply theme class and persist preference
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -125,6 +134,29 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('fuel-flow-theme', newTheme);
+  };
+
+  // iOS Sound Fix: Resume AudioContext on first user interaction
+  useEffect(() => {
+    const resumeAudio = () => {
+      if (audioCtx.current && audioCtx.current.state === 'suspended') {
+        audioCtx.current.resume();
+      }
+    };
+
+    window.addEventListener('click', resumeAudio, { once: true });
+    window.addEventListener('touchstart', resumeAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('click', resumeAudio);
+      window.removeEventListener('touchstart', resumeAudio);
+    };
+  }, []);
 
   const [result, setResult] = useState<{
     isValid: boolean;
@@ -295,7 +327,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              onClick={toggleTheme}
               className="p-2 hover:bg-[#141414]/5 dark:hover:bg-white/5 rounded-full transition-colors text-[#141414]/60 dark:text-white/60"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
