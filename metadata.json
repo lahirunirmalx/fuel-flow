@@ -1,0 +1,5 @@
+{
+  "name": "Fuel Flow Validator",
+  "description": "A vehicle plate validation app that determines gas pumping eligibility based on the last digit and current date parity.",
+  "requestFramePermissions": []
+}
