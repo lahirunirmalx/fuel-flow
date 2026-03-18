@@ -3,3 +3,5 @@
 @theme {
   --dark-mode: selector;
 }
+
+@variant dark (&:where(.dark, .dark *));

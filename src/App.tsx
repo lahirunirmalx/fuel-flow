@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fuel, CheckCircle2, AlertCircle, Calendar, ArrowRight, Car, Volume2, VolumeX, Info, Skull, RefreshCw, Sun, Moon } from 'lucide-react';
+import { Fuel, CheckCircle2, AlertCircle, Calendar, ArrowRight, Car, Volume2, VolumeX, Info, Skull, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -100,45 +100,61 @@ function DepressiveFact() {
 export default function App() {
   const [input, setInput] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const audioCtx = useRef<AudioContext | null>(null);
   const lastPlayed = useRef<string | null>(null);
 
-  // Initialize theme from localStorage or system preference
+  // Initialize theme from localStorage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('fuel-flow-theme') as 'light' | 'dark' | null;
+    const savedTheme = localStorage.getItem('fuel-flow-theme') as 'light' | 'dark' | 'system' | null;
     if (savedTheme) {
       setTheme(savedTheme);
-    } else {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(isDark ? 'dark' : 'light');
     }
+  }, []);
 
-    // Listen for system theme changes ONLY if user hasn't set a preference
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('fuel-flow-theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
+  // Apply theme class and handle system changes
+  useEffect(() => {
+    const root = window.document.documentElement;
+    
+    const applyTheme = (t: 'light' | 'dark' | 'system') => {
+      // Remove both classes first
+      root.classList.remove('light', 'dark');
+      
+      let effectiveTheme = t;
+      if (t === 'system') {
+        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      // Add the effective theme class
+      root.classList.add(effectiveTheme);
+      
+      // Specifically for Tailwind's selector strategy, ensure 'dark' class is present/absent
+      if (effectiveTheme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
       }
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    applyTheme(theme);
 
-  // Apply theme class and persist preference
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    // If in system mode, listen for changes
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => applyTheme('system');
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('fuel-flow-theme', newTheme);
+    const modes: ('system' | 'light' | 'dark')[] = ['system', 'light', 'dark'];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const nextTheme = modes[nextIndex];
+    
+    setTheme(nextTheme);
+    localStorage.setItem('fuel-flow-theme', nextTheme);
   };
 
   // iOS Sound Fix: Resume AudioContext on first user interaction
@@ -328,10 +344,13 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
               onClick={toggleTheme}
-              className="p-2 hover:bg-[#141414]/5 dark:hover:bg-white/5 rounded-full transition-colors text-[#141414]/60 dark:text-white/60"
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              className="p-2 hover:bg-[#141414]/5 dark:hover:bg-white/5 rounded-full transition-colors text-[#141414]/60 dark:text-white/60 flex items-center gap-2"
+              title={`Theme: ${theme}`}
             >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {theme === 'system' && <Monitor className="w-4 h-4" />}
+              {theme === 'light' && <Sun className="w-4 h-4" />}
+              {theme === 'dark' && <Moon className="w-4 h-4" />}
+              <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">{theme}</span>
             </button>
             <button 
               onClick={() => setSoundEnabled(!soundEnabled)}
