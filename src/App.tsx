@@ -6,9 +6,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Fuel, CheckCircle2, AlertCircle, Calendar, ArrowRight, Car, Volume2, VolumeX, Info, Skull, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 function Tooltip({ children, content }: { children: React.ReactNode; content: string }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -40,12 +37,10 @@ function DepressiveFact() {
   const generateFact = async () => {
     setLoading(true);
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: "Generate a short, depressive, and cynical 'fact' explaining why fuel rationing (like parity-based pumping) is necessary. Blame current and previous governments, uneducated fuel hoarders, and literally everyone except the user. Use a dark, pessimistic tone. Keep it under 3 sentences.",
-      });
-      setFact(response.text || "The system is broken, and it's not your fault. It's everyone else's.");
-    } catch (error) {
+      const res = await fetch("/api/generate-fact");
+      const data = await res.json();
+      setFact(data.text ?? "The system is broken, and it's not your fault. It's everyone else's.");
+    } catch {
       setFact("The AI is too depressed to answer. Probably because of the government.");
     } finally {
       setLoading(false);
