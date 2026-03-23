@@ -21,6 +21,11 @@
   to = "/.netlify/functions/fuel-prices"
   status = 200
 
+[[redirects]]
+  from = "/api/status"
+  to = "/.netlify/functions/status"
+  status = 200
+
 # SPA: serve index.html for client-side routes
 [[redirects]]
   from = "/*"

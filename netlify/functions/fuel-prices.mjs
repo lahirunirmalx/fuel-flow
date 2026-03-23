@@ -2,6 +2,9 @@
  * POST /.netlify/functions/fuel-prices — Gemini + optional Google Search for Sri Lanka fuel prices.
  */
 import { GoogleGenAI } from "@google/genai";
+import { envInt } from "./lib/env.mjs";
+import { getClientKey, checkRateLimit } from "./lib/rateLimit.mjs";
+import { truncateString } from "./lib/truncate.mjs";
 
 const FUEL_PRICE_PROMPT = `You are helping with Sri Lanka retail fuel prices. Use Google Search to find the latest credible prices (today or most recent official/major media).
 
@@ -39,11 +42,15 @@ function normalizeFuelPayload(raw) {
   const priv = o.privatePrices;
   if (!Array.isArray(gov) || !Array.isArray(priv)) return null;
 
+  const nameMax = envInt("FUEL_PRICE_NAME_MAX_CHARS", 80);
+  const summaryMax = envInt("FUEL_SOURCE_SUMMARY_MAX_CHARS", 500);
+
   const rows = (arr) =>
     arr
       .map((item) => {
         if (!item || typeof item !== "object") return null;
-        const name = typeof item.name === "string" ? item.name.trim() : "";
+        const rawName = typeof item.name === "string" ? item.name.trim() : "";
+        const name = truncateString(rawName, nameMax);
         const n = item.lkrPerLiter;
         const lkr =
           typeof n === "number" && Number.isFinite(n)
@@ -56,18 +63,20 @@ function normalizeFuelPayload(raw) {
       })
       .filter(Boolean);
 
-  const sourceSummary =
-    typeof o.sourceSummary === "string" ? o.sourceSummary.trim() : undefined;
+  let summary = typeof o.sourceSummary === "string" ? o.sourceSummary.trim() : "";
+  summary = truncateString(summary, summaryMax);
+  const sourceSummary = summary || undefined;
 
   return { governmentPrices: rows(gov), privatePrices: rows(priv), sourceSummary };
 }
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "X-Content-Type-Options": "nosniff",
+      ...extraHeaders,
     },
   });
 }
@@ -76,6 +85,20 @@ export default async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
+
+  const rl = checkRateLimit(
+    `${getClientKey(req)}:fuel-prices`,
+    "RATE_LIMIT_FUEL_PRICES_MAX",
+    15
+  );
+  if (!rl.ok) {
+    return jsonResponse(
+      { error: "Too many requests" },
+      429,
+      { "Retry-After": String(rl.retryAfterSec) }
+    );
+  }
+
   const apiKey = Netlify.env.get("GEMINI_API_KEY");
   if (!apiKey) {
     return jsonResponse({ error: "GEMINI_API_KEY not configured." }, 503);

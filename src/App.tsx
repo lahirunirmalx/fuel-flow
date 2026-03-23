@@ -30,6 +30,8 @@ import {
   Banknote,
   Sparkles,
   ListChecks,
+  Terminal,
+  Code,
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { calculateWorkStatus, type Sector } from './utils/workStatus';
@@ -98,6 +100,82 @@ function pickDisplayPrices(
     return payload.governmentPrices.filter(isGovernmentFuelRow);
   }
   return [...payload.privatePrices].sort((a, b) => b.lkrPerLiter - a.lkrPerLiter);
+}
+
+/** Same patterns as validateAndCheck — used only to guess “complete” on first paint for collapsed state. */
+function isPlateFormatValid(value: string): boolean {
+  const t = value.trim();
+  if (!t) return false;
+  if (/^\d+\s*-\s*\d+$/.test(t)) return true;
+  return /^[A-Za-z]{2,3}\s*[- ]?\s*\d{4}$/i.test(t);
+}
+
+function readInitialEditingProfile(): boolean {
+  const g = readSavedBool(CK.government);
+  const e = readSavedBool(CK.essential);
+  const workReadyInit = g === false || (g === true && e !== null);
+  const plate = (Cookies.get(CK.vehicle) ?? '').trim().toUpperCase();
+  return !(workReadyInit && isPlateFormatValid(plate));
+}
+
+function ProfileSummaryCompact({
+  isGovernment,
+  isEssential,
+  plate,
+  lastDigit,
+  canPump,
+  onEdit,
+}: {
+  isGovernment: boolean | null;
+  isEssential: boolean | null;
+  plate: string;
+  lastDigit: number;
+  canPump: boolean;
+  onEdit: () => void;
+}) {
+  const jobLine =
+    isGovernment === true
+      ? `Government · ${isEssential === true ? 'Very important' : isEssential === false ? 'Normal job' : '—'}`
+      : isGovernment === false
+        ? 'Private sector'
+        : '—';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-5 sm:p-6 rounded-3xl border border-[#141414]/10 dark:border-white/10 bg-white dark:bg-white/5 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+    >
+      <div className="space-y-2 min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B]">
+          Your details
+        </p>
+        <p className="text-sm font-medium text-[#141414] dark:text-white/90">{jobLine}</p>
+        <p className="text-sm text-[#141414]/80 dark:text-white/75">
+          <span className="text-[#141414]/45 dark:text-white/40">Plate</span>{' '}
+          <span className="font-mono font-semibold tracking-wide">{plate}</span>
+          <span className="text-[#141414]/45 dark:text-white/40 text-xs ml-2">
+            · last digit {lastDigit} ({lastDigit % 2 === 0 ? 'even' : 'odd'})
+          </span>
+        </p>
+        <p className="text-xs text-[#141414]/55 dark:text-white/45">
+          Parity today:{' '}
+          <span className="font-medium text-[#141414] dark:text-white/80">
+            {canPump ? 'Can refuel' : 'Cannot refuel'}
+          </span>{' '}
+          — full breakdown below.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#5A5A40]/45 dark:border-[#8B8B6B]/45 text-sm font-semibold text-[#5A5A40] dark:text-[#8B8B6B] hover:bg-[#5A5A40]/10 dark:hover:bg-[#8B8B6B]/10 transition-colors shrink-0"
+      >
+        <Edit2 className="w-4 h-4" />
+        Edit
+      </button>
+    </motion.div>
+  );
 }
 
 function Tooltip({ children, content }: { children: React.ReactNode; content: string }) {
@@ -370,6 +448,145 @@ function FueleroticaComingSoon() {
   );
 }
 
+function ApiReferenceSection({ origin }: { origin: string }) {
+  const base = origin || '(your deploy origin)';
+  const exampleStatus = `${base}/api/status?sector=government&isEssential=true&dayIndex=1`;
+
+  return (
+    <section
+      id="api-reference"
+      className="scroll-mt-28 p-6 sm:p-8 rounded-3xl border border-[#141414]/10 dark:border-white/10 bg-white dark:bg-white/[0.03] space-y-8"
+    >
+      <div className="flex items-start gap-3">
+        <div className="bg-[#5A5A40]/15 dark:bg-[#8B8B6B]/20 p-2.5 rounded-xl shrink-0">
+          <Terminal className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
+        </div>
+        <div className="space-y-1 min-w-0">
+          <h2 className="text-lg font-semibold text-[#141414] dark:text-white/90">API reference</h2>
+          <p className="text-sm text-[#141414]/60 dark:text-white/45 leading-relaxed">
+            JSON endpoints on this site. <strong className="text-[#141414]/80 dark:text-white/60">GET /api/status</strong>{' '}
+            is the same contract as the previous <em>should-I-work-today</em> app (work-day rules only — no plate or
+            prices).
+          </p>
+        </div>
+      </div>
+
+      {/* Legacy-compatible: work status */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide">
+            GET
+          </span>
+          <code className="text-sm font-mono text-[#141414] dark:text-white/85">/api/status</code>
+        </div>
+        <p className="text-xs text-[#141414]/55 dark:text-white/40">
+          Query parameters (government sector requires <code className="font-mono">isEssential</code>):
+        </p>
+        <div className="overflow-x-auto rounded-xl border border-[#141414]/8 dark:border-white/10">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#141414]/[0.04] dark:bg-white/[0.05] text-[10px] font-bold uppercase tracking-wider text-[#141414]/45 dark:text-white/40">
+              <tr>
+                <th className="px-4 py-3">Parameter</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Required</th>
+                <th className="px-4 py-3">Description</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#141414]/8 dark:divide-white/10">
+              <tr>
+                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">sector</td>
+                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">string</td>
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">Yes</td>
+                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
+                  <code className="font-mono">government</code> or <code className="font-mono">private</code>
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">isEssential</td>
+                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">boolean</td>
+                <td className="px-4 py-3 text-[#141414]/50 dark:text-white/40 text-xs">If government</td>
+                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
+                  <code className="font-mono">true</code> or <code className="font-mono">false</code> as string
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">dayIndex</td>
+                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">number</td>
+                <td className="px-4 py-3 text-[#141414]/50 dark:text-white/40 text-xs">No</td>
+                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
+                  <code className="font-mono">0</code> (Sun) … <code className="font-mono">6</code> (Sat). Defaults to
+                  today (server timezone).
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#141414]/40 dark:text-white/35">
+            Example
+          </p>
+          <pre className="p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-xs text-zinc-200 overflow-x-auto font-mono">
+            {`curl "${exampleStatus}"`}
+          </pre>
+        </div>
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#141414]/40 dark:text-white/35">
+            Response (success)
+          </p>
+          <pre className="p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-xs text-zinc-200 overflow-x-auto font-mono whitespace-pre-wrap">{`{
+  "status": "Go to Work",
+  "detail": "Must report today",
+  "message": "You have work today. Please go to your office.",
+  "type": "active",
+  "color": "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-900"
+}`}</pre>
+        </div>
+      </div>
+
+      <div className="border-t border-[#141414]/10 dark:border-white/10 pt-8 space-y-6">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B]">
+          FuelFlow-only endpoints
+        </p>
+
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide">
+              GET
+            </span>
+            <code className="text-sm font-mono">/api/generate-fact</code>
+          </div>
+          <p className="text-sm text-[#141414]/65 dark:text-white/50">
+            <strong className="text-[#141414]/75 dark:text-white/55">GET only</strong> (405 otherwise). Returns{' '}
+            <code className="font-mono text-xs">{'{ "text": string }'}</code> — cynical “fact” copy. Requires{' '}
+            <code className="font-mono text-xs">GEMINI_API_KEY</code> on the server. Per-IP rate limit may return{' '}
+            <code className="font-mono text-xs">429</code> with <code className="font-mono text-xs">Retry-After</code>.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2 py-1 rounded-md bg-amber-500/15 text-amber-900 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+              POST
+            </span>
+            <code className="text-sm font-mono">/api/fuel-prices</code>
+          </div>
+          <p className="text-sm text-[#141414]/65 dark:text-white/50">
+            Body can be empty <code className="font-mono text-xs">{'{}'}</code>. Same per-IP rate limiting as above. Returns{' '}
+            <code className="font-mono text-xs">governmentPrices</code>, <code className="font-mono text-xs">privatePrices</code>,{' '}
+            <code className="font-mono text-xs">sourceSummary</code>. Requires Gemini + optional Google Search.
+          </p>
+        </div>
+      </div>
+
+      <p className="text-[10px] uppercase tracking-wider text-[#141414]/40 dark:text-white/35 flex items-center gap-2">
+        <Code className="w-3.5 h-3.5" />
+        CORS: <code className="font-mono">GET /api/status</code> sends{' '}
+        <code className="font-mono">Access-Control-Allow-Origin: *</code> for simple cross-origin use.
+      </p>
+    </section>
+  );
+}
+
 function DepressiveFact() {
   const [fact, setFact] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -378,7 +595,17 @@ function DepressiveFact() {
     setLoading(true);
     try {
       const res = await fetch("/api/generate-fact");
-      const data = await res.json();
+      const data = (await res.json()) as { text?: string; error?: string };
+      if (!res.ok) {
+        setFact(
+          res.status === 429
+            ? "Too many requests. Wait a bit and try again."
+            : typeof data.error === "string"
+              ? data.error
+              : "The AI is too depressed to answer. Probably because of the government."
+        );
+        return;
+      }
       setFact(data.text ?? "The system is broken, and it's not your fault. It's everyone else's.");
     } catch {
       setFact("The AI is too depressed to answer. Probably because of the government.");
@@ -452,6 +679,13 @@ export default function App() {
   const [pricesPayload, setPricesPayload] = useState<FuelPricesPayload | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(readInitialEditingProfile);
+  const profileWasCompleteRef = useRef(false);
+  const [siteOrigin, setSiteOrigin] = useState('');
+
+  useEffect(() => {
+    setSiteOrigin(window.location.origin);
+  }, []);
 
   // Apply theme class and handle system changes
   useEffect(() => {
@@ -723,9 +957,22 @@ export default function App() {
     isGovernment === true ? 'government' : isGovernment === false ? 'private' : null;
   const workReady =
     sector === 'private' || (sector === 'government' && isEssential !== null);
+  const profileComplete = workReady && result?.isValid === true;
   const workResult =
     sector && workReady ? calculateWorkStatus(sector, isEssential, dayIndex) : null;
   const displayRows = sector ? pickDisplayPrices(pricesPayload, sector) : [];
+
+  useEffect(() => {
+    if (!profileComplete) {
+      setEditingProfile(true);
+      profileWasCompleteRef.current = false;
+      return;
+    }
+    if (!profileWasCompleteRef.current) {
+      setEditingProfile(false);
+    }
+    profileWasCompleteRef.current = true;
+  }, [profileComplete]);
 
   const fetchPrices = useCallback(async () => {
     setPriceLoading(true);
@@ -787,10 +1034,18 @@ export default function App() {
     void fetchPrices();
   }, [workReady, sector, result?.isValid, input, fetchPrices]);
 
-  const priceFetchSettled =
-    !priceLoading && (priceError !== null || pricesPayload !== null);
-  const showPipeline =
-    workReady && result?.isValid && workResult && priceFetchSettled;
+  /** Work + parity show immediately; prices load in the background. */
+  const showPipeline = workReady && result?.isValid && workResult;
+
+  const summaryPriceLine = priceLoading
+    ? 'Loading indicative prices in the background — details below update when ready.'
+    : priceError
+      ? `Could not load prices (${priceError}).`
+      : displayRows.length > 0
+        ? `${displayRows.length} product(s) for your sector — see fuel section below.`
+        : pricesPayload !== null
+          ? 'No price rows matched your sector filter after search.'
+          : 'Price data not available yet.';
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] dark:bg-[#0A0A0A] text-[#141414] dark:text-white/90 font-sans selection:bg-[#5A5A40] selection:text-white transition-colors duration-300">
@@ -836,55 +1091,81 @@ export default function App() {
           className="space-y-8"
         >
           {/* Hero Section */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h2 className="text-3xl sm:text-4xl font-serif font-medium leading-tight">
-              Step by step: <br />
-              <span className="italic text-[#5A5A40] dark:text-[#8B8B6B]">job → plate → prices → summary.</span>
+              Work, fuel rules, <br />
+              <span className="italic text-[#5A5A40] dark:text-[#8B8B6B]">and today&apos;s picture.</span>
             </h2>
-            <p className="text-[#141414]/60 dark:text-white/40 max-w-lg text-sm sm:text-base">
-              Complete your job profile first. Your choices and plate are stored in cookies for the next visit.
-              After your plate validates, we pull today&apos;s indicative prices automatically, then show a summary and breakdown.
+            <p className="text-sm sm:text-base font-semibold text-[#5A5A40] dark:text-[#8B8B6B] tracking-wide max-w-lg">
+              Know before you roll.
+            </p>
+            <p className="text-[#141414]/60 dark:text-white/40 max-w-lg text-sm sm:text-base leading-relaxed">
+              Save your job type and number plate on this device. See whether you should work, if parity lets you refuel
+              today, and indicative LKR/litre from search (Gemini) — always verify at the office and the pump.
             </p>
           </div>
 
-          {/* Step 1 — Job only (always visible first) */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B] px-1">
-              Step 1 · Job details
-            </p>
-            <JobProfileCard
+          {profileComplete && !editingProfile && result?.isValid && result.lastDigit !== undefined ? (
+            <ProfileSummaryCompact
               isGovernment={isGovernment}
               isEssential={isEssential}
-              onGov={(v) => {
-                setIsGovernment(v);
-                if (!v) setIsEssential(null);
-              }}
-              onEssential={setIsEssential}
-              currentDay={currentDay}
-              currentTime={currentTime}
-              activeSection={activeSection}
-              setActiveSection={setActiveSection}
+              plate={input.trim()}
+              lastDigit={result.lastDigit}
+              canPump={result.canPump}
+              onEdit={() => setEditingProfile(true)}
             />
-            {!workReady && (
-              <p className="text-xs text-[#141414]/50 dark:text-white/40 px-1">
-                Finish government / private (and work type if government) to unlock the vehicle step.
-              </p>
-            )}
-          </div>
+          ) : (
+            <>
+              {profileComplete && editingProfile && (
+                <div className="flex justify-end px-1 mb-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProfile(false)}
+                    className="px-4 py-2 rounded-xl bg-[#5A5A40] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
 
-          {/* Step 2 — Vehicle (only after job complete) */}
-          <AnimatePresence>
-            {workReady && (
-              <motion.div
-                key="vehicle-step"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="space-y-3"
-              >
+              {/* Step 1 — Job only */}
+              <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B] px-1">
-                  Step 2 · Vehicle number
+                  Step 1 · Job details
                 </p>
+                <JobProfileCard
+                  isGovernment={isGovernment}
+                  isEssential={isEssential}
+                  onGov={(v) => {
+                    setIsGovernment(v);
+                    if (!v) setIsEssential(null);
+                  }}
+                  onEssential={setIsEssential}
+                  currentDay={currentDay}
+                  currentTime={currentTime}
+                  activeSection={activeSection}
+                  setActiveSection={setActiveSection}
+                />
+                {!workReady && (
+                  <p className="text-xs text-[#141414]/50 dark:text-white/40 px-1">
+                    Finish government / private (and work type if government) to unlock the vehicle step.
+                  </p>
+                )}
+              </div>
+
+              {/* Step 2 — Vehicle (only after job complete) */}
+              <AnimatePresence>
+                {workReady && (
+                  <motion.div
+                    key="vehicle-step"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="space-y-3"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B] px-1">
+                      Step 2 · Vehicle number
+                    </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between px-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#141414]/40 dark:text-white/30">
@@ -954,11 +1235,13 @@ export default function App() {
                     </div>
                   </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
 
-          {/* Step 3–4 — Summary then detail cards (after plate valid + price fetch settled) */}
+          {/* Step 3–4 — Summary + details immediately; prices section updates when background fetch completes */}
           <AnimatePresence>
             {showPipeline && workResult && result?.isValid && (
               <motion.div
@@ -986,12 +1269,7 @@ export default function App() {
                         : `No — next window around ${result.nextDate ?? 'the next matching day'}.`}
                     </li>
                     <li>
-                      <strong>Indicative prices:</strong>{' '}
-                      {priceError
-                        ? `Could not load (${priceError}).`
-                        : displayRows.length > 0
-                          ? `${displayRows.length} product(s) for your sector — see breakdown below.`
-                          : 'No rows matched the filter after search.'}
+                      <strong>Indicative prices:</strong> {summaryPriceLine}
                     </li>
                   </ul>
                   <p className="text-[10px] uppercase tracking-wider text-[#141414]/45 dark:text-white/35">
@@ -1063,7 +1341,7 @@ export default function App() {
                   )}
                 </motion.div>
 
-                {/* Detail: Fuel prices */}
+                {/* Detail: Fuel prices (background fetch — skeleton until data arrives) */}
                 <motion.div
                   layout
                   className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
@@ -1096,10 +1374,29 @@ export default function App() {
                     These numbers come from a one-shot Gemini request with optional Google Search. They are{' '}
                     <strong>not</strong> official quotes — always confirm on the forecourt or government notices.
                   </p>
+                  {priceLoading && (
+                    <div className="space-y-3" aria-busy="true" aria-label="Loading fuel prices">
+                      <p className="text-xs font-medium text-[#5A5A40] dark:text-[#8B8B6B] flex items-center gap-2">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+                        Fetching in the background — you can read work and parity above while this finishes.
+                      </p>
+                      <div className="space-y-2">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="flex justify-between gap-4 py-2 border-b border-[#141414]/6 dark:border-white/10"
+                          >
+                            <div className="h-4 bg-[#141414]/10 dark:bg-white/10 rounded animate-pulse w-2/5" />
+                            <div className="h-4 bg-[#141414]/10 dark:bg-white/10 rounded animate-pulse w-24" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {priceError && (
                     <p className="text-sm text-red-600 dark:text-red-400">{priceError}</p>
                   )}
-                  {displayRows.length > 0 && (
+                  {!priceLoading && displayRows.length > 0 && (
                     <ul className="space-y-2">
                       {displayRows.map((row) => (
                         <li
@@ -1115,10 +1412,10 @@ export default function App() {
                       ))}
                     </ul>
                   )}
-                  {pricesPayload?.sourceSummary && (
+                  {!priceLoading && pricesPayload?.sourceSummary && (
                     <p className="text-xs text-[#141414]/50 dark:text-white/40 italic">{pricesPayload.sourceSummary}</p>
                   )}
-                  {!priceError && pricesPayload && displayRows.length === 0 && (
+                  {!priceLoading && !priceError && pricesPayload !== null && displayRows.length === 0 && (
                     <p className="text-sm text-[#141414]/55 dark:text-white/45">No rows matched your sector filter.</p>
                   )}
                 </motion.div>
@@ -1126,6 +1423,7 @@ export default function App() {
             )}
           </AnimatePresence>
 
+          <ApiReferenceSection origin={siteOrigin} />
           <FueleroticaComingSoon />
           <DepressiveFact />
         </motion.div>
@@ -1135,7 +1433,13 @@ export default function App() {
       <footer className="max-w-2xl mx-auto px-6 py-12 border-t border-[#141414]/5 dark:border-white/5 mt-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 opacity-40 text-xs uppercase tracking-widest font-medium">
           <p>© 2026 FuelFlow Systems</p>
-          <div className="flex gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
+            <a
+              href="#api-reference"
+              className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors"
+            >
+              API
+            </a>
             <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Privacy</a>
             <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Terms</a>
             <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Support</a>

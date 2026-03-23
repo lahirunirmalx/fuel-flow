@@ -1,6 +1,6 @@
 # FuelFlow
 
-Vite + React SPA with **Netlify Functions** for Gemini (`/api/generate-fact`, `/api/fuel-prices`).  
+Vite + React SPA with **Netlify Functions** for Gemini (`/api/generate-fact`, `/api/fuel-prices`) and a **public** legacy work-status API: **`GET /api/status`** (same JSON shape as the old *should-I-work-today* service; no API key).  
 There is **no Node/Express server** in this repo—only static `dist/` + serverless functions.
 
 ## Deploy on Netlify
@@ -8,7 +8,8 @@ There is **no Node/Express server** in this repo—only static `dist/` + serverl
 1. Connect this repo.
 2. Build settings are in `netlify.toml` (`npm run build`, publish `dist`, functions `netlify/functions`).
 3. Add **`GEMINI_API_KEY`** under **Site configuration → Environment variables** (include **Functions** scope).
-4. Deploy.
+4. Optional: tune **`RATE_LIMIT_*`**, **`GENERATE_FACT_MAX_CHARS`**, **`FUEL_*_MAX_CHARS`** — see [`.env.example`](./.env.example) and [SECURITY.md](./SECURITY.md).
+5. Deploy.
 
 ## Local development
 
