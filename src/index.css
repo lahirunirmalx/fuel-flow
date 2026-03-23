@@ -5,3 +5,9 @@
 }
 
 @variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

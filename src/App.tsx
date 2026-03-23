@@ -32,6 +32,7 @@ import {
   ListChecks,
   Terminal,
   Code,
+  X,
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { calculateWorkStatus, type Sector } from './utils/workStatus';
@@ -144,16 +145,16 @@ function ProfileSummaryCompact({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-5 sm:p-6 rounded-3xl border border-[#141414]/10 dark:border-white/10 bg-white dark:bg-white/5 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+      className="p-4 sm:p-6 rounded-3xl border border-[#141414]/10 dark:border-white/10 bg-white dark:bg-white/5 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
     >
       <div className="space-y-2 min-w-0 flex-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B]">
           Your details
         </p>
         <p className="text-sm font-medium text-[#141414] dark:text-white/90">{jobLine}</p>
-        <p className="text-sm text-[#141414]/80 dark:text-white/75">
+        <p className="text-sm text-[#141414]/80 dark:text-white/75 break-words">
           <span className="text-[#141414]/45 dark:text-white/40">Plate</span>{' '}
-          <span className="font-mono font-semibold tracking-wide">{plate}</span>
+          <span className="font-mono font-semibold tracking-wide break-all">{plate}</span>
           <span className="text-[#141414]/45 dark:text-white/40 text-xs ml-2">
             · last digit {lastDigit} ({lastDigit % 2 === 0 ? 'even' : 'odd'})
           </span>
@@ -169,7 +170,7 @@ function ProfileSummaryCompact({
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#5A5A40]/45 dark:border-[#8B8B6B]/45 text-sm font-semibold text-[#5A5A40] dark:text-[#8B8B6B] hover:bg-[#5A5A40]/10 dark:hover:bg-[#8B8B6B]/10 transition-colors shrink-0"
+        className="inline-flex w-full sm:w-auto min-h-12 items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl border-2 border-[#5A5A40]/45 dark:border-[#8B8B6B]/45 text-sm font-semibold text-[#5A5A40] dark:text-[#8B8B6B] hover:bg-[#5A5A40]/10 dark:hover:bg-[#8B8B6B]/10 transition-colors shrink-0 touch-manipulation active:opacity-90"
       >
         <Edit2 className="w-4 h-4" />
         Edit
@@ -182,7 +183,12 @@ function Tooltip({ children, content }: { children: React.ReactNode; content: st
   const [isVisible, setIsVisible] = useState(false);
 
   return (
-    <div className="relative inline-block" onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)} onClick={() => setIsVisible(!isVisible)}>
+    <div
+      className="relative inline-block touch-manipulation"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+      onClick={() => setIsVisible(!isVisible)}
+    >
       {children}
       <AnimatePresence>
         {isVisible && (
@@ -190,7 +196,7 @@ function Tooltip({ children, content }: { children: React.ReactNode; content: st
             initial={{ opacity: 0, y: 5, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
-            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#141414] dark:bg-white text-white dark:text-[#141414] text-[10px] font-medium rounded-lg w-max max-w-[200px] text-center shadow-xl pointer-events-none"
+            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#141414] dark:bg-white text-white dark:text-[#141414] text-[10px] font-medium rounded-lg w-max max-w-[min(18rem,calc(100vw-2rem))] text-center shadow-xl pointer-events-none"
           >
             {content}
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#141414] dark:border-t-white" />
@@ -233,21 +239,21 @@ function JobProfileCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
+      className="p-4 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#5A5A40]/15 dark:bg-[#8B8B6B]/20 p-2 rounded-xl">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="bg-[#5A5A40]/15 dark:bg-[#8B8B6B]/20 p-2 rounded-xl shrink-0">
             <ShieldCheck className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold text-[#141414] dark:text-white/90">Should I work today?</h3>
             <p className="text-[10px] uppercase tracking-widest text-[#141414]/45 dark:text-white/35">
               Job type · saved in cookies (365 days)
             </p>
           </div>
         </div>
-        <div className="text-right shrink-0">
+        <div className="text-left sm:text-right shrink-0">
           <div className="flex items-center justify-end gap-1 text-xs font-mono text-[#141414]/70 dark:text-white/55">
             <Clock className="w-3.5 h-3.5" />
             {currentTime}
@@ -268,7 +274,7 @@ function JobProfileCard({
         <button
           type="button"
           onClick={() => isGovernment !== null && setActiveSection(1)}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full min-h-12 touch-manipulation flex items-center justify-between gap-3 p-4 text-left active:bg-[#141414]/[0.03] dark:active:bg-white/[0.04]"
         >
           <div className="flex items-center gap-3">
             <div
@@ -306,7 +312,7 @@ function JobProfileCard({
                     onGov(true);
                     setActiveSection(2);
                   }}
-                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                  className={`min-h-[3.25rem] touch-manipulation flex items-center gap-3 p-3 rounded-xl border text-left transition-all active:opacity-90 ${
                     isGovernment === true
                       ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
                       : 'border-[#141414]/10 dark:border-white/10 hover:border-[#141414]/20'
@@ -321,7 +327,7 @@ function JobProfileCard({
                     onGov(false);
                     setActiveSection(3);
                   }}
-                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                  className={`min-h-[3.25rem] touch-manipulation flex items-center gap-3 p-3 rounded-xl border text-left transition-all active:opacity-90 ${
                     isGovernment === false
                       ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
                       : 'border-[#141414]/10 dark:border-white/10 hover:border-[#141414]/20'
@@ -349,7 +355,7 @@ function JobProfileCard({
           <button
             type="button"
             onClick={() => isEssential !== null && setActiveSection(2)}
-            className="w-full flex items-center justify-between p-4 text-left"
+            className="w-full min-h-12 touch-manipulation flex items-center justify-between gap-3 p-4 text-left active:bg-[#141414]/[0.03] dark:active:bg-white/[0.04]"
           >
             <div className="flex items-center gap-3">
               <div
@@ -387,7 +393,7 @@ function JobProfileCard({
                       onEssential(true);
                       setActiveSection(3);
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-left ${
+                    className={`min-h-[3.25rem] touch-manipulation flex items-center gap-3 p-3 rounded-xl border text-left active:opacity-90 ${
                       isEssential === true
                         ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
                         : 'border-[#141414]/10 dark:border-white/10'
@@ -402,7 +408,7 @@ function JobProfileCard({
                       onEssential(false);
                       setActiveSection(3);
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-left ${
+                    className={`min-h-[3.25rem] touch-manipulation flex items-center gap-3 p-3 rounded-xl border text-left active:opacity-90 ${
                       isEssential === false
                         ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
                         : 'border-[#141414]/10 dark:border-white/10'
@@ -426,7 +432,7 @@ function FueleroticaComingSoon() {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-8 sm:p-10 rounded-3xl border-2 border-dashed border-[#5A5A40]/35 dark:border-[#8B8B6B]/30 bg-gradient-to-br from-[#5A5A40]/8 to-transparent dark:from-[#8B8B6B]/10 text-center space-y-4"
+      className="p-5 sm:p-10 rounded-3xl border-2 border-dashed border-[#5A5A40]/35 dark:border-[#8B8B6B]/30 bg-gradient-to-br from-[#5A5A40]/8 to-transparent dark:from-[#8B8B6B]/10 text-center space-y-4"
     >
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#141414]/10 dark:bg-white/10 text-[10px] font-bold uppercase tracking-[0.25em] text-[#5A5A40] dark:text-[#8B8B6B]">
         Coming soon
@@ -448,28 +454,17 @@ function FueleroticaComingSoon() {
   );
 }
 
-function ApiReferenceSection({ origin }: { origin: string }) {
+function ApiReferenceContent({ origin }: { origin: string }) {
   const base = origin || '(your deploy origin)';
   const exampleStatus = `${base}/api/status?sector=government&isEssential=true&dayIndex=1`;
 
   return (
-    <section
-      id="api-reference"
-      className="scroll-mt-28 p-6 sm:p-8 rounded-3xl border border-[#141414]/10 dark:border-white/10 bg-white dark:bg-white/[0.03] space-y-8"
-    >
-      <div className="flex items-start gap-3">
-        <div className="bg-[#5A5A40]/15 dark:bg-[#8B8B6B]/20 p-2.5 rounded-xl shrink-0">
-          <Terminal className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
-        </div>
-        <div className="space-y-1 min-w-0">
-          <h2 className="text-lg font-semibold text-[#141414] dark:text-white/90">API reference</h2>
-          <p className="text-sm text-[#141414]/60 dark:text-white/45 leading-relaxed">
-            JSON endpoints on this site. <strong className="text-[#141414]/80 dark:text-white/60">GET /api/status</strong>{' '}
-            is the same contract as the previous <em>should-I-work-today</em> app (work-day rules only — no plate or
-            prices).
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <p className="text-sm text-[#141414]/60 dark:text-white/45 leading-relaxed break-words">
+        JSON endpoints on this site. <strong className="text-[#141414]/80 dark:text-white/60">GET /api/status</strong>{' '}
+        is the same contract as the previous <em>should-I-work-today</em> app (work-day rules only — no plate or
+        prices).
+      </p>
 
       {/* Legacy-compatible: work status */}
       <div className="space-y-4">
@@ -482,40 +477,40 @@ function ApiReferenceSection({ origin }: { origin: string }) {
         <p className="text-xs text-[#141414]/55 dark:text-white/40">
           Query parameters (government sector requires <code className="font-mono">isEssential</code>):
         </p>
-        <div className="overflow-x-auto rounded-xl border border-[#141414]/8 dark:border-white/10">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[#141414]/[0.04] dark:bg-white/[0.05] text-[10px] font-bold uppercase tracking-wider text-[#141414]/45 dark:text-white/40">
+        <div className="-mx-1 overflow-x-auto rounded-xl border border-[#141414]/8 dark:border-white/10 sm:mx-0">
+          <table className="w-full min-w-[20rem] text-left text-xs sm:text-sm">
+            <thead className="bg-[#141414]/[0.04] dark:bg-white/[0.05] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[#141414]/45 dark:text-white/40">
               <tr>
-                <th className="px-4 py-3">Parameter</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Required</th>
-                <th className="px-4 py-3">Description</th>
+                <th className="px-2 py-2.5 sm:px-4 sm:py-3">Parameter</th>
+                <th className="px-2 py-2.5 sm:px-4 sm:py-3">Type</th>
+                <th className="px-2 py-2.5 sm:px-4 sm:py-3">Req</th>
+                <th className="px-2 py-2.5 sm:px-4 sm:py-3">Description</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#141414]/8 dark:divide-white/10">
               <tr>
-                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">sector</td>
-                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">string</td>
-                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">Yes</td>
-                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
-                  <code className="font-mono">government</code> or <code className="font-mono">private</code>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 font-mono text-[11px] sm:text-xs text-[#5A5A40] dark:text-[#8B8B6B]">sector</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/70 dark:text-white/55">string</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] sm:text-xs">Yes</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/65 dark:text-white/50 break-words">
+                  <code className="font-mono text-[10px] sm:text-xs">government</code> or{' '}
+                  <code className="font-mono text-[10px] sm:text-xs">private</code>
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">isEssential</td>
-                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">boolean</td>
-                <td className="px-4 py-3 text-[#141414]/50 dark:text-white/40 text-xs">If government</td>
-                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
-                  <code className="font-mono">true</code> or <code className="font-mono">false</code> as string
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 font-mono text-[11px] sm:text-xs text-[#5A5A40] dark:text-[#8B8B6B]">isEssential</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/70 dark:text-white/55">boolean</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/50 dark:text-white/40 text-[11px] sm:text-xs">Gov</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/65 dark:text-white/50 break-words">
+                  <code className="font-mono text-[10px] sm:text-xs">true</code> or <code className="font-mono text-[10px] sm:text-xs">false</code> string
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-mono text-xs text-[#5A5A40] dark:text-[#8B8B6B]">dayIndex</td>
-                <td className="px-4 py-3 text-[#141414]/70 dark:text-white/55">number</td>
-                <td className="px-4 py-3 text-[#141414]/50 dark:text-white/40 text-xs">No</td>
-                <td className="px-4 py-3 text-[#141414]/65 dark:text-white/50">
-                  <code className="font-mono">0</code> (Sun) … <code className="font-mono">6</code> (Sat). Defaults to
-                  today (server timezone).
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 font-mono text-[11px] sm:text-xs text-[#5A5A40] dark:text-[#8B8B6B]">dayIndex</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/70 dark:text-white/55">number</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/50 dark:text-white/40 text-[11px] sm:text-xs">No</td>
+                <td className="px-2 py-2.5 sm:px-4 sm:py-3 text-[#141414]/65 dark:text-white/50 break-words">
+                  <code className="font-mono text-[10px] sm:text-xs">0</code>–<code className="font-mono text-[10px] sm:text-xs">6</code>. Default: today (server TZ).
                 </td>
               </tr>
             </tbody>
@@ -525,7 +520,7 @@ function ApiReferenceSection({ origin }: { origin: string }) {
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#141414]/40 dark:text-white/35">
             Example
           </p>
-          <pre className="p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-xs text-zinc-200 overflow-x-auto font-mono">
+          <pre className="p-3 sm:p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-[10px] sm:text-xs text-zinc-200 overflow-x-auto font-mono break-all whitespace-pre-wrap">
             {`curl "${exampleStatus}"`}
           </pre>
         </div>
@@ -533,7 +528,7 @@ function ApiReferenceSection({ origin }: { origin: string }) {
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#141414]/40 dark:text-white/35">
             Response (success)
           </p>
-          <pre className="p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-xs text-zinc-200 overflow-x-auto font-mono whitespace-pre-wrap">{`{
+          <pre className="p-3 sm:p-4 rounded-xl bg-[#141414] dark:bg-zinc-950 text-[10px] sm:text-xs text-zinc-200 overflow-x-auto font-mono whitespace-pre-wrap break-words">{`{
   "status": "Go to Work",
   "detail": "Must report today",
   "message": "You have work today. Please go to your office.",
@@ -578,12 +573,93 @@ function ApiReferenceSection({ origin }: { origin: string }) {
         </div>
       </div>
 
-      <p className="text-[10px] uppercase tracking-wider text-[#141414]/40 dark:text-white/35 flex items-center gap-2">
-        <Code className="w-3.5 h-3.5" />
-        CORS: <code className="font-mono">GET /api/status</code> sends{' '}
-        <code className="font-mono">Access-Control-Allow-Origin: *</code> for simple cross-origin use.
+      <p className="text-[10px] uppercase tracking-wider text-[#141414]/40 dark:text-white/35 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <Code className="w-3.5 h-3.5 shrink-0" />
+        <span className="break-words">
+          CORS: <code className="font-mono normal-case">GET /api/status</code> →{' '}
+          <code className="font-mono normal-case text-[9px] sm:text-[10px]">Access-Control-Allow-Origin: *</code>
+        </span>
       </p>
-    </section>
+    </div>
+  );
+}
+
+function ApiReferenceModal({
+  open,
+  onClose,
+  origin,
+}: {
+  open: boolean;
+  onClose: () => void;
+  origin: string;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="api-reference-modal"
+          className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-0 sm:p-4 pt-[env(safe-area-inset-top,0px)] sm:pt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 z-0 bg-black/50 dark:bg-black/70 w-full h-full cursor-default border-0 p-0 touch-manipulation"
+            aria-label="Close API reference"
+            onClick={onClose}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="api-modal-title"
+            initial={{ y: 48, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 32, opacity: 0 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+            className="relative z-10 flex max-h-[min(92dvh,720px)] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border border-[#141414]/15 bg-white shadow-2xl dark:border-white/15 dark:bg-zinc-950 sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#141414]/10 px-4 py-3 sm:px-5 sm:py-4 dark:border-white/10">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="shrink-0 rounded-xl bg-[#5A5A40]/15 p-2 dark:bg-[#8B8B6B]/20">
+                  <Terminal className="h-5 w-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
+                </div>
+                <h2 id="api-modal-title" className="truncate text-base font-semibold text-[#141414] dark:text-white/90">
+                  API reference
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="shrink-0 min-h-11 min-w-11 touch-manipulation flex items-center justify-center rounded-xl text-[#141414]/60 transition-colors hover:bg-[#141414]/5 dark:text-white/50 dark:hover:bg-white/10 active:opacity-80"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-5 sm:py-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
+              <ApiReferenceContent origin={origin} />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -622,19 +698,21 @@ function DepressiveFact() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="mt-16 p-6 rounded-3xl bg-[#141414] dark:bg-white/5 text-white/80 dark:text-white/60 border border-white/10 space-y-4"
+      className="mt-10 sm:mt-16 p-4 sm:p-6 rounded-3xl bg-[#141414] dark:bg-white/5 text-white/80 dark:text-white/60 border border-white/10 space-y-4"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-red-400/60">
-          <Skull className="w-4 h-4" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">The Harsh Reality</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-red-400/60 min-w-0">
+          <Skull className="w-4 h-4 shrink-0" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] truncate">The Harsh Reality</span>
         </div>
         <button 
+          type="button"
           onClick={generateFact}
           disabled={loading}
-          className="p-2 hover:bg-white/5 rounded-full transition-colors disabled:opacity-30"
+          className="min-h-11 min-w-11 shrink-0 touch-manipulation flex items-center justify-center rounded-full hover:bg-white/5 transition-colors disabled:opacity-30 active:opacity-80"
+          aria-label="Refresh fact"
         >
-          <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       
@@ -645,13 +723,13 @@ function DepressiveFact() {
             <div className="h-2 bg-white/5 rounded-full animate-pulse w-3/4" />
           </div>
         ) : (
-          <p className="text-sm font-serif italic leading-relaxed opacity-60">
-            "{fact}"
+          <p className="text-sm font-serif italic leading-relaxed opacity-60 break-words w-full">
+            &ldquo;{fact}&rdquo;
           </p>
         )}
       </div>
       
-      <div className="pt-4 border-t border-white/5 flex justify-between items-center text-[9px] uppercase tracking-widest opacity-30">
+      <div className="pt-4 border-t border-white/5 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-[9px] uppercase tracking-widest opacity-30 text-center sm:text-left">
         <span>System Failure: Active</span>
         <span>Blame: Distributed</span>
       </div>
@@ -682,6 +760,7 @@ export default function App() {
   const [editingProfile, setEditingProfile] = useState(readInitialEditingProfile);
   const profileWasCompleteRef = useRef(false);
   const [siteOrigin, setSiteOrigin] = useState('');
+  const [apiModalOpen, setApiModalOpen] = useState(false);
 
   useEffect(() => {
     setSiteOrigin(window.location.origin);
@@ -1048,30 +1127,32 @@ export default function App() {
           : 'Price data not available yet.';
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] dark:bg-[#0A0A0A] text-[#141414] dark:text-white/90 font-sans selection:bg-[#5A5A40] selection:text-white transition-colors duration-300">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F5F5F0] dark:bg-[#0A0A0A] text-[#141414] dark:text-white/90 font-sans selection:bg-[#5A5A40] selection:text-white transition-colors duration-300">
       {/* Header */}
-      <header className="border-b border-[#141414]/10 dark:border-white/10 bg-white/50 dark:bg-black/50 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-[#5A5A40] p-2 rounded-lg">
+      <header className="border-b border-[#141414]/10 dark:border-white/10 bg-white/50 dark:bg-black/50 backdrop-blur-md sticky top-0 z-10 pt-[env(safe-area-inset-top,0px)]">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="bg-[#5A5A40] p-2 rounded-lg shrink-0">
               <Fuel className="w-5 h-5 text-white" />
             </div>
-            <h1 className="font-serif italic text-xl font-semibold tracking-tight">FuelFlow</h1>
+            <h1 className="font-serif italic text-lg sm:text-xl font-semibold tracking-tight truncate">FuelFlow</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-4 shrink-0">
             <button 
+              type="button"
               onClick={toggleTheme}
-              className="p-2 hover:bg-[#141414]/5 dark:hover:bg-white/5 rounded-full transition-colors text-[#141414]/60 dark:text-white/60 flex items-center gap-2"
+              className="min-h-11 min-w-11 touch-manipulation flex items-center justify-center rounded-full hover:bg-[#141414]/5 dark:hover:bg-white/5 transition-colors text-[#141414]/60 dark:text-white/60 gap-2 active:opacity-80"
               title={`Theme: ${theme}`}
             >
               {theme === 'system' && <Monitor className="w-4 h-4" />}
               {theme === 'light' && <Sun className="w-4 h-4" />}
               {theme === 'dark' && <Moon className="w-4 h-4" />}
-              <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">{theme}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">{theme}</span>
             </button>
             <button 
+              type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="p-2 hover:bg-[#141414]/5 dark:hover:bg-white/5 rounded-full transition-colors text-[#141414]/60 dark:text-white/60"
+              className="min-h-11 min-w-11 touch-manipulation flex items-center justify-center rounded-full hover:bg-[#141414]/5 dark:hover:bg-white/5 transition-colors text-[#141414]/60 dark:text-white/60 active:opacity-80"
               title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -1083,7 +1164,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
         <motion.div 
           layout
           initial={{ opacity: 0, y: 20 }}
@@ -1092,14 +1173,14 @@ export default function App() {
         >
           {/* Hero Section */}
           <div className="space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-serif font-medium leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-medium leading-[1.15] sm:leading-tight break-words">
               Work, fuel rules, <br />
               <span className="italic text-[#5A5A40] dark:text-[#8B8B6B]">and today&apos;s picture.</span>
             </h2>
-            <p className="text-sm sm:text-base font-semibold text-[#5A5A40] dark:text-[#8B8B6B] tracking-wide max-w-lg">
+            <p className="text-sm sm:text-base font-semibold text-[#5A5A40] dark:text-[#8B8B6B] tracking-wide max-w-lg break-words">
               Know before you roll.
             </p>
-            <p className="text-[#141414]/60 dark:text-white/40 max-w-lg text-sm sm:text-base leading-relaxed">
+            <p className="text-[#141414]/60 dark:text-white/40 max-w-lg text-sm sm:text-base leading-relaxed break-words">
               Save your job type and number plate on this device. See whether you should work, if parity lets you refuel
               today, and indicative LKR/litre from search (Gemini) — always verify at the office and the pump.
             </p>
@@ -1117,11 +1198,11 @@ export default function App() {
           ) : (
             <>
               {profileComplete && editingProfile && (
-                <div className="flex justify-end px-1 mb-1">
+                <div className="flex justify-stretch sm:justify-end px-1 mb-1">
                   <button
                     type="button"
                     onClick={() => setEditingProfile(false)}
-                    className="px-4 py-2 rounded-xl bg-[#5A5A40] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                    className="w-full sm:w-auto min-h-12 px-4 py-3 rounded-xl bg-[#5A5A40] text-white text-sm font-semibold hover:opacity-90 transition-opacity touch-manipulation active:opacity-95"
                   >
                     Done
                   </button>
@@ -1176,7 +1257,7 @@ export default function App() {
                     </Tooltip>
                   </div>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
                       <Car className="w-5 h-5 text-[#141414]/30 dark:text-white/20 group-focus-within:text-[#5A5A40] dark:group-focus-within:text-[#8B8B6B] transition-colors" />
                     </div>
                     <input
@@ -1184,7 +1265,10 @@ export default function App() {
                       value={input}
                       onChange={handleChange}
                       placeholder="e.g. KA-2587 or 1-2234"
-                      className={`w-full bg-white dark:bg-white/5 border-2 rounded-2xl py-4 sm:py-5 pl-12 pr-6 text-lg sm:text-xl font-mono tracking-wider focus:outline-none transition-all shadow-sm ${
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      enterKeyHint="done"
+                      className={`w-full bg-white dark:bg-white/5 border-2 rounded-2xl py-3.5 sm:py-5 pl-11 sm:pl-12 pr-4 sm:pr-6 text-base sm:text-lg md:text-xl font-mono tracking-wider focus:outline-none transition-all shadow-sm touch-manipulation ${
                         !input
                           ? 'border-[#141414]/5 dark:border-white/5 focus:border-[#5A5A40] dark:focus:border-[#8B8B6B]'
                           : result?.isValid
@@ -1219,19 +1303,19 @@ export default function App() {
 
                 {(!result || !result.isValid) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div className="p-6 bg-white dark:bg-white/5 rounded-2xl border border-[#141414]/5 dark:border-white/5 space-y-2">
+                    <div className="p-4 sm:p-6 bg-white dark:bg-white/5 rounded-2xl border border-[#141414]/5 dark:border-white/5 space-y-2">
                       <div className="text-[#5A5A40] dark:text-[#8B8B6B] font-bold text-xs uppercase tracking-widest">
                         Rule one
                       </div>
                       <p className="text-sm font-medium">Numeric plates with a dash</p>
-                      <p className="text-xs text-[#141414]/40 dark:text-white/30 font-mono">1-2234, 17-6789, 302-1054</p>
+                      <p className="text-xs text-[#141414]/40 dark:text-white/30 font-mono break-all">1-2234, 17-6789, 302-1054</p>
                     </div>
-                    <div className="p-6 bg-white dark:bg-white/5 rounded-2xl border border-[#141414]/5 dark:border-white/5 space-y-2">
+                    <div className="p-4 sm:p-6 bg-white dark:bg-white/5 rounded-2xl border border-[#141414]/5 dark:border-white/5 space-y-2">
                       <div className="text-[#5A5A40] dark:text-[#8B8B6B] font-bold text-xs uppercase tracking-widest">
                         Rule two
                       </div>
                       <p className="text-sm font-medium">Alpha-numeric with 4 digits</p>
-                      <p className="text-xs text-[#141414]/40 dark:text-white/30 font-mono">KA-2587, VX 8564, ABA - 2354</p>
+                      <p className="text-xs text-[#141414]/40 dark:text-white/30 font-mono break-all">KA-2587, VX 8564, ABA - 2354</p>
                     </div>
                   </div>
                 )}
@@ -1253,22 +1337,22 @@ export default function App() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] dark:text-[#8B8B6B] px-1">
                   Step 3 · Summary
                 </p>
-                <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#5A5A40]/25 dark:border-[#8B8B6B]/30 bg-white dark:bg-white/[0.03] space-y-4">
+                <div className="p-4 sm:p-8 rounded-3xl border-2 border-[#5A5A40]/25 dark:border-[#8B8B6B]/30 bg-white dark:bg-white/[0.03] space-y-4">
                   <div className="flex items-center gap-2 text-[#5A5A40] dark:text-[#8B8B6B]">
-                    <ListChecks className="w-5 h-5" />
+                    <ListChecks className="w-5 h-5 shrink-0" />
                     <h3 className="text-sm font-bold uppercase tracking-widest">At a glance</h3>
                   </div>
-                  <ul className="space-y-2 text-sm text-[#141414]/85 dark:text-white/80">
-                    <li>
+                  <ul className="space-y-2.5 text-sm text-[#141414]/85 dark:text-white/80">
+                    <li className="break-words">
                       <strong>Work:</strong> {workResult.status} — {workResult.message}
                     </li>
-                    <li>
+                    <li className="break-words">
                       <strong>Pump today:</strong>{' '}
                       {result.canPump
                         ? 'Yes (date parity matches your plate).'
                         : `No — next window around ${result.nextDate ?? 'the next matching day'}.`}
                     </li>
-                    <li>
+                    <li className="break-words">
                       <strong>Indicative prices:</strong> {summaryPriceLine}
                     </li>
                   </ul>
@@ -1284,16 +1368,16 @@ export default function App() {
                 {/* Detail: Work */}
                 <motion.div
                   layout
-                  className={`p-6 sm:p-7 rounded-3xl border-2 ${workResult.color}`}
+                  className={`p-4 sm:p-7 rounded-3xl border-2 ${workResult.color}`}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <ShieldCheck className="w-5 h-5 opacity-70" />
+                    <ShieldCheck className="w-5 h-5 opacity-70 shrink-0" />
                     <h4 className="text-xs font-bold uppercase tracking-widest opacity-80">Work status</h4>
                   </div>
-                  <p className="text-lg font-semibold text-[#141414] dark:text-white/90">{workResult.status}</p>
+                  <p className="text-base sm:text-lg font-semibold text-[#141414] dark:text-white/90 break-words">{workResult.status}</p>
                   <p className="text-xs font-bold uppercase tracking-wider opacity-60 mt-1">{workResult.detail}</p>
-                  <p className="text-sm mt-3 leading-relaxed opacity-85">{workResult.message}</p>
-                  <p className="text-xs mt-3 text-[#141414]/55 dark:text-white/45">
+                  <p className="text-sm mt-3 leading-relaxed opacity-85 break-words">{workResult.message}</p>
+                  <p className="text-xs mt-3 text-[#141414]/55 dark:text-white/45 break-words">
                     Based on sector ({sector === 'government' ? 'government' : 'private'}
                     {sector === 'government' && isEssential !== null
                       ? isEssential
@@ -1307,18 +1391,18 @@ export default function App() {
                 {/* Detail: Parity pumping */}
                 <motion.div
                   layout
-                  className={`p-6 sm:p-7 rounded-3xl border-2 ${
+                  className={`p-4 sm:p-7 rounded-3xl border-2 ${
                     result.canPump
                       ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-500/25 dark:bg-emerald-500/10'
                       : 'border-amber-200 bg-amber-50/80 dark:border-amber-500/25 dark:bg-amber-500/10'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <Fuel className="w-5 h-5 opacity-70" />
+                    <Fuel className="w-5 h-5 opacity-70 shrink-0" />
                     <h4 className="text-xs font-bold uppercase tracking-widest opacity-80">Parity pumping</h4>
                   </div>
-                  <p className="text-sm font-semibold text-[#141414] dark:text-white/90">{result.message}</p>
-                  <p className="text-sm mt-3 leading-relaxed text-[#141414]/75 dark:text-white/70">
+                  <p className="text-sm font-semibold text-[#141414] dark:text-white/90 break-words">{result.message}</p>
+                  <p className="text-sm mt-3 leading-relaxed text-[#141414]/75 dark:text-white/70 break-words">
                     Today&apos;s calendar date is <strong>{new Date().getDate()}</strong> (
                     {new Date().getDate() % 2 !== 0 ? 'odd' : 'even'}). Your plate&apos;s last digit is{' '}
                     <strong className="font-mono">{result.lastDigit}</strong> (
@@ -1328,15 +1412,17 @@ export default function App() {
                       : 'They do not match, so wait for a calendar day whose date number has the same odd/even parity as your last digit. Month boundaries are handled (e.g. after the 31st, the 1st can be odd too — we advance day by day until a match).'}
                   </p>
                   {!result.canPump && result.nextDate && (
-                    <div className="mt-4 flex items-center gap-3 p-4 rounded-2xl bg-white/60 dark:bg-white/5 border border-amber-200/60 dark:border-amber-500/20">
-                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/60 dark:text-amber-400/50">
-                          Next matching day
-                        </p>
-                        <p className="font-medium text-amber-900 dark:text-amber-200">{result.nextDate}</p>
+                    <div className="mt-4 flex flex-col gap-3 p-4 rounded-2xl bg-white/60 dark:bg-white/5 border border-amber-200/60 dark:border-amber-500/20 sm:flex-row sm:items-center">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/60 dark:text-amber-400/50">
+                            Next matching day
+                          </p>
+                          <p className="font-medium text-amber-900 dark:text-amber-200 break-words">{result.nextDate}</p>
+                        </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 ml-auto text-amber-500 shrink-0" />
+                      <ArrowRight className="hidden sm:block w-4 h-4 text-amber-500 shrink-0 sm:ml-auto" aria-hidden />
                     </div>
                   )}
                 </motion.div>
@@ -1344,14 +1430,14 @@ export default function App() {
                 {/* Detail: Fuel prices (background fetch — skeleton until data arrives) */}
                 <motion.div
                   layout
-                  className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
+                  className="p-4 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Banknote className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
-                      <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <Banknote className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B] shrink-0 mt-0.5" />
+                      <div className="min-w-0">
                         <h4 className="text-sm font-semibold text-[#141414] dark:text-white/90">Fuel prices (today&apos;s pull)</h4>
-                        <p className="text-[10px] uppercase tracking-widest text-[#141414]/45 dark:text-white/35">
+                        <p className="text-[10px] uppercase tracking-widest text-[#141414]/45 dark:text-white/35 break-words">
                           {sector === 'government'
                             ? 'Government view: Oct 92, normal diesel, kerosene'
                             : 'Private view: all grades found, highest LKR/L per type'}
@@ -1364,13 +1450,13 @@ export default function App() {
                         void fetchPrices();
                       }}
                       disabled={priceLoading}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#5A5A40] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="inline-flex w-full sm:w-auto shrink-0 min-h-12 items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl bg-[#5A5A40] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-opacity touch-manipulation active:opacity-95"
                     >
                       <RefreshCw className={`w-4 h-4 ${priceLoading ? 'animate-spin' : ''}`} />
                       {priceLoading ? 'Searching…' : 'Refresh prices'}
                     </button>
                   </div>
-                  <p className="text-sm text-[#141414]/65 dark:text-white/50 leading-relaxed">
+                  <p className="text-sm text-[#141414]/65 dark:text-white/50 leading-relaxed break-words">
                     These numbers come from a one-shot Gemini request with optional Google Search. They are{' '}
                     <strong>not</strong> official quotes — always confirm on the forecourt or government notices.
                   </p>
@@ -1401,10 +1487,10 @@ export default function App() {
                       {displayRows.map((row) => (
                         <li
                           key={row.name + row.lkrPerLiter}
-                          className="flex justify-between items-center text-sm py-2 border-b border-[#141414]/8 dark:border-white/10 last:border-0"
+                          className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-sm py-3 sm:py-2 border-b border-[#141414]/8 dark:border-white/10 last:border-0"
                         >
-                          <span className="text-[#141414]/80 dark:text-white/70">{row.name}</span>
-                          <span className="font-mono font-semibold">
+                          <span className="text-[#141414]/80 dark:text-white/70 break-words pr-2">{row.name}</span>
+                          <span className="font-mono font-semibold shrink-0 sm:text-right">
                             LKR {row.lkrPerLiter.toFixed(2)}
                             <span className="text-[10px] font-sans font-normal opacity-60 ml-1">/L</span>
                           </span>
@@ -1423,29 +1509,50 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          <ApiReferenceSection origin={siteOrigin} />
           <FueleroticaComingSoon />
           <DepressiveFact />
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer className="max-w-2xl mx-auto px-6 py-12 border-t border-[#141414]/5 dark:border-white/5 mt-12">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 opacity-40 text-xs uppercase tracking-widest font-medium">
+      <footer className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12 border-t border-[#141414]/5 dark:border-white/5 mt-8 sm:mt-12 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 opacity-40 text-xs uppercase tracking-widest font-medium text-center md:text-left">
           <p>© 2026 FuelFlow Systems</p>
-          <div className="flex flex-wrap justify-center gap-8">
-            <a
-              href="#api-reference"
-              className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors"
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 sm:gap-8">
+            <button
+              type="button"
+              onClick={() => setApiModalOpen(true)}
+              className="min-h-11 min-w-[2.75rem] inline-flex items-center justify-center bg-transparent border-0 px-2 cursor-pointer font-[inherit] uppercase tracking-widest hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors touch-manipulation active:opacity-70"
             >
               API
+            </button>
+            <a
+              href="#"
+              className="min-h-11 inline-flex items-center px-2 hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors touch-manipulation active:opacity-70"
+            >
+              Privacy
             </a>
-            <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Privacy</a>
-            <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Terms</a>
-            <a href="#" className="hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors">Support</a>
+            <a
+              href="#"
+              className="min-h-11 inline-flex items-center px-2 hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors touch-manipulation active:opacity-70"
+            >
+              Terms
+            </a>
+            <a
+              href="#"
+              className="min-h-11 inline-flex items-center px-2 hover:text-[#5A5A40] dark:hover:text-[#8B8B6B] transition-colors touch-manipulation active:opacity-70"
+            >
+              Support
+            </a>
           </div>
         </div>
       </footer>
+
+      <ApiReferenceModal
+        open={apiModalOpen}
+        onClose={() => setApiModalOpen(false)}
+        origin={siteOrigin}
+      />
     </div>
   );
 }
