@@ -5,7 +5,65 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fuel, CheckCircle2, AlertCircle, Calendar, ArrowRight, Car, Volume2, VolumeX, Info, Skull, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
+import {
+  Fuel,
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  ArrowRight,
+  Car,
+  Volume2,
+  VolumeX,
+  Info,
+  Skull,
+  RefreshCw,
+  Sun,
+  Moon,
+  Monitor,
+  Briefcase,
+  Building2,
+  ShieldCheck,
+  Clock,
+  ChevronDown,
+  Edit2,
+  XCircle,
+  Banknote,
+} from 'lucide-react';
+import { calculateWorkStatus, type Sector } from './utils/workStatus';
+import type { FuelPriceRow, FuelPricesPayload } from './types/fuelPrices';
+
+const LS = {
+  vehicle: 'fuel-flow-vehicle',
+  government: 'fuel-flow-government',
+  essential: 'fuel-flow-essential',
+} as const;
+
+function readSavedBool(key: string): boolean | null {
+  const v = localStorage.getItem(key);
+  if (v === 'true') return true;
+  if (v === 'false') return false;
+  return null;
+}
+
+/** Keep gov view to Oct 92, normal diesel, kerosene-style rows. */
+function isGovernmentFuelRow(r: FuelPriceRow): boolean {
+  const n = r.name.toLowerCase();
+  if (n.includes('keros')) return true;
+  if (n.includes('diesel') && !n.includes('super') && !n.includes('premium')) return true;
+  if ((n.includes('92') || n.includes('octane 92')) && !n.includes('95') && !n.includes('98')) return true;
+  return false;
+}
+
+function pickDisplayPrices(
+  payload: FuelPricesPayload | null,
+  sector: Sector
+): FuelPriceRow[] {
+  if (!payload) return [];
+  if (sector === 'government') {
+    return payload.governmentPrices.filter(isGovernmentFuelRow);
+  }
+  return [...payload.privatePrices].sort((a, b) => b.lkrPerLiter - a.lkrPerLiter);
+}
 
 function Tooltip({ children, content }: { children: React.ReactNode; content: string }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,6 +85,226 @@ function Tooltip({ children, content }: { children: React.ReactNode; content: st
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+type DayName =
+  | 'Sunday'
+  | 'Monday'
+  | 'Tuesday'
+  | 'Wednesday'
+  | 'Thursday'
+  | 'Friday'
+  | 'Saturday';
+
+function JobProfileCard({
+  isGovernment,
+  isEssential,
+  onGov,
+  onEssential,
+  currentDay,
+  currentTime,
+  activeSection,
+  setActiveSection,
+}: {
+  isGovernment: boolean | null;
+  isEssential: boolean | null;
+  onGov: (v: boolean) => void;
+  onEssential: (v: boolean) => void;
+  currentDay: DayName;
+  currentTime: string;
+  activeSection: 1 | 2 | 3;
+  setActiveSection: (n: 1 | 2 | 3) => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="bg-[#5A5A40]/15 dark:bg-[#8B8B6B]/20 p-2 rounded-xl">
+            <ShieldCheck className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-[#141414] dark:text-white/90">Should I work today?</h3>
+            <p className="text-[10px] uppercase tracking-widest text-[#141414]/45 dark:text-white/35">
+              Job type · saved locally
+            </p>
+          </div>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="flex items-center justify-end gap-1 text-xs font-mono text-[#141414]/70 dark:text-white/55">
+            <Clock className="w-3.5 h-3.5" />
+            {currentTime}
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#141414]/40 dark:text-white/35">
+            {currentDay}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`rounded-2xl border transition-colors ${
+          activeSection === 1
+            ? 'border-[#5A5A40]/30 bg-[#5A5A40]/5 dark:border-[#8B8B6B]/25 dark:bg-white/[0.03]'
+            : 'border-[#141414]/8 dark:border-white/10'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => isGovernment !== null && setActiveSection(1)}
+          className="w-full flex items-center justify-between p-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                isGovernment !== null
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-[#141414]/5 dark:bg-white/10 text-[#141414]/35'
+              }`}
+            >
+              {isGovernment !== null ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">1</span>}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#141414] dark:text-white/90">Job type</p>
+              {isGovernment !== null && activeSection !== 1 && (
+                <p className="text-xs text-[#141414]/55 dark:text-white/45">
+                  {isGovernment ? 'Government' : 'Private sector'}
+                </p>
+              )}
+            </div>
+          </div>
+          {isGovernment !== null && activeSection !== 1 ? <Edit2 className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 text-[#5A5A40]" />}
+        </button>
+        <AnimatePresence>
+          {activeSection === 1 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onGov(true);
+                    setActiveSection(2);
+                  }}
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                    isGovernment === true
+                      ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
+                      : 'border-[#141414]/10 dark:border-white/10 hover:border-[#141414]/20'
+                  }`}
+                >
+                  <Building2 className="w-5 h-5 shrink-0 opacity-70" />
+                  <span className="text-sm font-medium">Government</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onGov(false);
+                    setActiveSection(3);
+                  }}
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                    isGovernment === false
+                      ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
+                      : 'border-[#141414]/10 dark:border-white/10 hover:border-[#141414]/20'
+                  }`}
+                >
+                  <Briefcase className="w-5 h-5 shrink-0 opacity-70" />
+                  <span className="text-sm font-medium">Private sector</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {isGovernment === true && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl border transition-colors ${
+            activeSection === 2
+              ? 'border-[#5A5A40]/30 bg-[#5A5A40]/5 dark:border-[#8B8B6B]/25'
+              : 'border-[#141414]/8 dark:border-white/10'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => isEssential !== null && setActiveSection(2)}
+            className="w-full flex items-center justify-between p-4 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  isEssential !== null
+                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-[#141414]/5 dark:bg-white/10 text-[#141414]/35'
+                }`}
+              >
+                {isEssential !== null ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">2</span>}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#141414] dark:text-white/90">Type of work</p>
+                {isEssential !== null && activeSection !== 2 && (
+                  <p className="text-xs text-[#141414]/55 dark:text-white/45">
+                    {isEssential ? 'Very important' : 'Normal job'}
+                  </p>
+                )}
+              </div>
+            </div>
+            {isEssential !== null && activeSection !== 2 ? <Edit2 className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 text-[#5A5A40]" />}
+          </button>
+          <AnimatePresence>
+            {activeSection === 2 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEssential(true);
+                      setActiveSection(3);
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-left ${
+                      isEssential === true
+                        ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
+                        : 'border-[#141414]/10 dark:border-white/10'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-5 h-5 shrink-0 opacity-70" />
+                    <span className="text-sm font-medium">Very important</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEssential(false);
+                      setActiveSection(3);
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-left ${
+                      isEssential === false
+                        ? 'border-[#5A5A40] dark:border-[#8B8B6B] bg-[#5A5A40]/10'
+                        : 'border-[#141414]/10 dark:border-white/10'
+                    }`}
+                  >
+                    <XCircle className="w-5 h-5 shrink-0 opacity-70" />
+                    <span className="text-sm font-medium">Normal job</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
 
@@ -93,11 +371,26 @@ function DepressiveFact() {
 }
 
 export default function App() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(() => localStorage.getItem(LS.vehicle) ?? '');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const audioCtx = useRef<AudioContext | null>(null);
-  const lastPlayed = useRef<string | null>(null);
+
+  const [isGovernment, setIsGovernment] = useState<boolean | null>(() => readSavedBool(LS.government));
+  const [isEssential, setIsEssential] = useState<boolean | null>(() => readSavedBool(LS.essential));
+  const [activeSection, setActiveSection] = useState<1 | 2 | 3>(() => {
+    const g = readSavedBool(LS.government);
+    const e = readSavedBool(LS.essential);
+    if (g === true) return e !== null ? 3 : 2;
+    if (g === false) return 3;
+    return 1;
+  });
+  const [currentDay, setCurrentDay] = useState<DayName>('Monday');
+  const [dayIndex, setDayIndex] = useState(0);
+  const [currentTime, setCurrentTime] = useState('');
+  const [pricesPayload, setPricesPayload] = useState<FuelPricesPayload | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceError, setPriceError] = useState<string | null>(null);
 
   // Initialize theme from localStorage
   useEffect(() => {
@@ -167,6 +460,43 @@ export default function App() {
       window.removeEventListener('click', resumeAudio);
       window.removeEventListener('touchstart', resumeAudio);
     };
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(LS.vehicle, input);
+  }, [input]);
+
+  useEffect(() => {
+    if (isGovernment !== null) {
+      localStorage.setItem(LS.government, String(isGovernment));
+    }
+  }, [isGovernment]);
+
+  useEffect(() => {
+    if (isEssential !== null) {
+      localStorage.setItem(LS.essential, String(isEssential));
+    }
+  }, [isEssential]);
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const days: DayName[] = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      setCurrentDay(days[now.getDay()]);
+      setDayIndex(now.getDay());
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    };
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => clearInterval(id);
   }, []);
 
   const [result, setResult] = useState<{
@@ -325,6 +655,48 @@ export default function App() {
     validateAndCheck(value);
   };
 
+  const sector: Sector | null =
+    isGovernment === true ? 'government' : isGovernment === false ? 'private' : null;
+  const workReady =
+    sector === 'private' || (sector === 'government' && isEssential !== null);
+  const workResult =
+    sector && workReady ? calculateWorkStatus(sector, isEssential, dayIndex) : null;
+  const displayRows = sector ? pickDisplayPrices(pricesPayload, sector) : [];
+
+  const fetchPrices = async () => {
+    setPriceLoading(true);
+    setPriceError(null);
+    try {
+      const res = await fetch('/api/fuel-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      const data = (await res.json()) as { error?: string } & Partial<FuelPricesPayload>;
+      if (!res.ok) {
+        throw new Error(typeof data.error === 'string' ? data.error : 'Request failed');
+      }
+      setPricesPayload({
+        governmentPrices: data.governmentPrices ?? [],
+        privatePrices: data.privatePrices ?? [],
+        sourceSummary: data.sourceSummary,
+      });
+    } catch (e) {
+      setPriceError(e instanceof Error ? e.message : 'Failed to fetch prices');
+      setPricesPayload(null);
+    } finally {
+      setPriceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem(LS.vehicle);
+    if (saved?.trim()) {
+      validateAndCheck(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate parity once from saved plate
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F5F5F0] dark:bg-[#0A0A0A] text-[#141414] dark:text-white/90 font-sans selection:bg-[#5A5A40] selection:text-white transition-colors duration-300">
       {/* Header */}
@@ -371,13 +743,28 @@ export default function App() {
           {/* Hero Section */}
           <div className="space-y-2">
             <h2 className="text-3xl sm:text-4xl font-serif font-medium leading-tight">
-              Check your gas <br />
-              <span className="italic text-[#5A5A40] dark:text-[#8B8B6B]">pumping eligibility.</span>
+              Work, fuel rules, <br />
+              <span className="italic text-[#5A5A40] dark:text-[#8B8B6B]">and today&apos;s picture.</span>
             </h2>
-            <p className="text-[#141414]/60 dark:text-white/40 max-w-md text-sm sm:text-base">
-              Enter your vehicle number plate to see if you can refuel today based on the last digit parity.
+            <p className="text-[#141414]/60 dark:text-white/40 max-w-lg text-sm sm:text-base">
+              Save your job type and plate locally. See if you should work, parity pumping, and (via Gemini + search)
+              indicative LKR/litre — verify at the station.
             </p>
           </div>
+
+          <JobProfileCard
+            isGovernment={isGovernment}
+            isEssential={isEssential}
+            onGov={(v) => {
+              setIsGovernment(v);
+              if (!v) setIsEssential(null);
+            }}
+            onEssential={setIsEssential}
+            currentDay={currentDay}
+            currentTime={currentTime}
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+          />
 
           {/* Input Section */}
           <div className="space-y-2">
@@ -514,6 +901,113 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Fuel prices (Gemini + search) */}
+          <motion.div
+            layout
+            className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-[#141414]/8 dark:border-white/10 space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-[#5A5A40] dark:text-[#8B8B6B]" />
+                <div>
+                  <h3 className="text-sm font-semibold text-[#141414] dark:text-white/90">Fuel prices</h3>
+                  <p className="text-[10px] uppercase tracking-widest text-[#141414]/45 dark:text-white/35">
+                    {sector === 'government'
+                      ? 'Gov: Oct 92, normal diesel, kerosene'
+                      : sector === 'private'
+                        ? 'Private: all grades, highest per type'
+                        : 'Pick job type first'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={fetchPrices}
+                disabled={priceLoading || !sector}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#5A5A40] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
+              >
+                <RefreshCw className={`w-4 h-4 ${priceLoading ? 'animate-spin' : ''}`} />
+                {priceLoading ? 'Searching…' : 'Refresh prices'}
+              </button>
+            </div>
+            {priceError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{priceError}</p>
+            )}
+            {pricesPayload && sector && displayRows.length > 0 && (
+              <ul className="space-y-2">
+                {displayRows.map((row) => (
+                  <li
+                    key={row.name + row.lkrPerLiter}
+                    className="flex justify-between items-center text-sm py-2 border-b border-[#141414]/8 dark:border-white/10 last:border-0"
+                  >
+                    <span className="text-[#141414]/80 dark:text-white/70">{row.name}</span>
+                    <span className="font-mono font-semibold">
+                      LKR {row.lkrPerLiter.toFixed(2)}
+                      <span className="text-[10px] font-sans font-normal opacity-60 ml-1">/L</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {pricesPayload?.sourceSummary && (
+              <p className="text-xs text-[#141414]/50 dark:text-white/40 italic">{pricesPayload.sourceSummary}</p>
+            )}
+            {!priceLoading && pricesPayload && sector && displayRows.length === 0 && (
+              <p className="text-sm text-[#141414]/55 dark:text-white/45">No rows matched your sector filter.</p>
+            )}
+          </motion.div>
+
+          {/* Combined summary */}
+          {sector && workResult && (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`p-6 sm:p-8 rounded-3xl border-2 ${workResult.color}`}
+            >
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70 mb-2">Today&apos;s summary</h3>
+              <div className="space-y-4 text-sm leading-relaxed">
+                <div>
+                  <p className="font-semibold text-[#141414] dark:text-white/90">Work</p>
+                  <p>
+                    <strong>{workResult.status}</strong> — {workResult.message}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-[#141414] dark:text-white/90">Parity pumping</p>
+                  {!result || !result.isValid ? (
+                    <p>Enter a valid plate to see if you can pump today.</p>
+                  ) : (
+                    <p>
+                      {result.canPump
+                        ? 'You can pump today (parity matches).'
+                        : `Not today — try ${result.nextDate ?? 'the next matching day'}.`}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-[#141414] dark:text-white/90">
+                    Indicative prices ({sector === 'government' ? 'government' : 'private'} view)
+                  </p>
+                  {displayRows.length === 0 ? (
+                    <p>Tap &quot;Refresh prices&quot; to load LKR/litre from search.</p>
+                  ) : (
+                    <ul className="mt-1 space-y-1 font-mono text-xs sm:text-sm">
+                      {displayRows.map((row) => (
+                        <li key={`s-${row.name}`}>
+                          {row.name}: LKR {row.lkrPerLiter.toFixed(2)}/L
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <p className="text-[10px] uppercase tracking-wider opacity-50">
+                  AI + web search can be wrong — confirm prices and rules officially.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <DepressiveFact />
         </motion.div>

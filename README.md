@@ -1,20 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# FuelFlow
 
-# Run and deploy your AI Studio app
+Vite + React SPA with **Netlify Functions** for Gemini (`/api/generate-fact`, `/api/fuel-prices`).  
+There is **no Node/Express server** in this repo—only static `dist/` + serverless functions.
 
-This contains everything you need to run your app locally.
+## Deploy on Netlify
 
-View your app in AI Studio: https://ai.studio/apps/b39caafb-5583-40f0-9fc6-66c3c817c9d4
+1. Connect this repo.
+2. Build settings are in `netlify.toml` (`npm run build`, publish `dist`, functions `netlify/functions`).
+3. Add **`GEMINI_API_KEY`** under **Site configuration → Environment variables** (include **Functions** scope).
+4. Deploy.
 
-## Run Locally
+## Local development
 
-**Prerequisites:**  Node.js
+- **UI only (no `/api`):** `npm install` → `npm run dev` — fetches to `/api/*` will fail unless you use Netlify Dev below.
+- **UI + API like production:** install [Netlify CLI](https://docs.netlify.com/cli/get-started/) and run:
 
+```bash
+npm install
+npx netlify dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Set `GEMINI_API_KEY` in a local `.env` in the project root; Netlify CLI injects it into functions.
+
+## Build
+
+Netlify’s build image runs Node to execute `npm run build` (Vite). You do not run or deploy a separate Node server.
