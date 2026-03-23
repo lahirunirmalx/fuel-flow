@@ -1,5 +1,5 @@
 {
-  "name": "Fuel Flow Validator",
-  "description": "A vehicle plate validation app that determines gas pumping eligibility based on the last digit and current date parity.",
+  "name": "FuelFlow",
+  "description": "Job-day guidance, vehicle plate parity for refuelling, and indicative fuel prices (unofficial).",
   "requestFramePermissions": []
 }

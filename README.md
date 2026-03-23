@@ -25,3 +25,7 @@ Set `GEMINI_API_KEY` in a local `.env` in the project root; Netlify CLI injects 
 ## Build
 
 Netlify’s build image runs Node to execute `npm run build` (Vite). You do not run or deploy a separate Node server.
+
+## Security
+
+See [SECURITY.md](./SECURITY.md) for threat model, what is (and is not) in the client, and residual risks.

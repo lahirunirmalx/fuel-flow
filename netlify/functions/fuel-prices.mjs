@@ -19,10 +19,17 @@ Rules:
 - Omit any product you cannot support from search; do not invent numbers.`;
 
 function parseFuelPricesJson(text) {
+  if (typeof text !== "string" || text.length > 500_000) {
+    return null;
+  }
   let t = text.trim();
   const fence = /^```(?:json)?\s*([\s\S]*?)```$/im.exec(t);
   if (fence) t = fence[1].trim();
-  return JSON.parse(t);
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
 }
 
 function normalizeFuelPayload(raw) {
@@ -58,7 +65,10 @@ function normalizeFuelPayload(raw) {
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+    },
   });
 }
 
@@ -94,6 +104,9 @@ export default async (req) => {
       return jsonResponse({ error: "Empty model response." }, 502);
     }
     const parsed = parseFuelPricesJson(text);
+    if (!parsed) {
+      return jsonResponse({ error: "Invalid JSON from model." }, 502);
+    }
     const payload = normalizeFuelPayload(parsed);
     if (!payload) {
       return jsonResponse({ error: "Could not parse fuel prices from model." }, 502);
